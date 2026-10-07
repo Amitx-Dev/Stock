@@ -1,0 +1,49 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-[#F8FAFC] dark:bg-[#0B0F17] text-slate-800 dark:text-slate-100 font-sans antialiased min-h-screen selection:bg-indigo-600 selection:text-white transition-colors duration-200;
+  }
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 9999px;
+}
+.dark ::-webkit-scrollbar-thumb {
+  background: #334155;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+.dark ::-webkit-scrollbar-thumb:hover {
+  background: #475569;
+}
+
+/* Card utilities matching AltIndex */
+.alt-card {
+  @apply bg-white dark:bg-[#111827] border border-slate-200/80 dark:border-slate-800/80 rounded-2xl shadow-sm transition-all;
+}
+
+.alt-card-hover {
+  @apply alt-card hover:shadow-md hover:border-indigo-200 dark:hover:border-indigo-900/50 transition-all duration-200;
+}
+
+/* Purple Glow */
+.glow-purple {
+  box-shadow: 0 4px 20px -2px rgba(99, 102, 241, 0.25);
+}
+
+.glow-purple-lg {
+  box-shadow: 0 10px 30px -4px rgba(99, 102, 241, 0.35);
+}
