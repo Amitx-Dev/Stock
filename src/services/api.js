@@ -1,11 +1,43 @@
-const API_BASE = 'http://localhost:5000/api';
+const JAVA_API_BASE = 'http://localhost:8080/api';
+const NODE_API_BASE = 'http://localhost:5000/api';
+const API_BASE = JAVA_API_BASE;
 
 /**
  * TradeNest API Client
- * Connects to Express + MySQL backend with automatic fallback
+ * Seamlessly connects to Java Web Backend (Port 8080) with automatic fallback to Express (Port 5000)
  */
 
-const fetchWithTimeout = async (url, options = {}, timeout = 3000) => {
+let activeBaseUrl = null;
+
+const getActiveApiBase = async () => {
+  if (activeBaseUrl) return activeBaseUrl;
+  try {
+    const testJava = await fetch(`${JAVA_API_BASE}/health`, { signal: AbortSignal.timeout(600) });
+    if (testJava.ok) {
+      activeBaseUrl = JAVA_API_BASE;
+      return JAVA_API_BASE;
+    }
+  } catch {}
+  try {
+    const testNode = await fetch(`${NODE_API_BASE}/health`, { signal: AbortSignal.timeout(600) });
+    if (testNode.ok) {
+      activeBaseUrl = NODE_API_BASE;
+      return NODE_API_BASE;
+    }
+  } catch {}
+  return JAVA_API_BASE;
+};
+
+const fetchWithTimeout = async (pathOrUrl, options = {}, timeout = 3000) => {
+  const base = await getActiveApiBase();
+  let url = pathOrUrl;
+  if (url.startsWith('http://localhost:8080/api') || url.startsWith('http://localhost:5000/api')) {
+    const relativePath = url.replace(/^http:\/\/localhost:(?:8080|5000)\/api/, '');
+    url = `${base}${relativePath}`;
+  } else if (!url.startsWith('http')) {
+    url = `${base}${url.startsWith('/') ? '' : '/'}${url}`;
+  }
+
   const controller = new AbortController();
   const id = setTimeout(() => controller.abort(), timeout);
   try {
@@ -13,6 +45,17 @@ const fetchWithTimeout = async (url, options = {}, timeout = 3000) => {
     clearTimeout(id);
     return response;
   } catch (error) {
+    if (base === JAVA_API_BASE) {
+      try {
+        const fallbackUrl = url.replace('8080', '5000');
+        const fallbackRes = await fetch(fallbackUrl, { ...options, signal: AbortSignal.timeout(1500) });
+        if (fallbackRes.ok) {
+          activeBaseUrl = NODE_API_BASE;
+          clearTimeout(id);
+          return fallbackRes;
+        }
+      } catch {}
+    }
     clearTimeout(id);
     throw error;
   }

@@ -25,3 +25,8 @@ dist-ssr
 *.sln
 *.sw?
 Thumbs.db
+
+# Java build output
+*.class
+bin/
+backend/bin/
