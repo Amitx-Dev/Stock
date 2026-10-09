@@ -92,6 +92,11 @@ public class TradeNestServer {
         try {
             TradeNestServer s = new TradeNestServer(port);
             s.start();
+        } catch (java.net.BindException be) {
+            System.out.println("=============================================================");
+            System.out.println("  [TradeNestServer] Port " + port + " is ALREADY ACTIVE!");
+            System.out.println("  TradeNest Java Web Server is running at http://localhost:" + port + "/");
+            System.out.println("=============================================================");
         } catch (Exception e) {
             System.err.println("Fatal: Could not launch TradeNest Java Server: " + e.getMessage());
             e.printStackTrace();

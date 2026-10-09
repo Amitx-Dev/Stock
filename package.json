@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "vite",
     "server": "node server/index.js",
-    "java:compile": "javac -cp backend/lib/mysql-connector-j-8.3.0.jar -d backend/bin backend/src/main/java/com/tradenest/**/*.java",
+    "java:compile": "node scripts/compile-java.cjs",
     "java:server": "java -cp backend/bin;backend/lib/mysql-connector-j-8.3.0.jar com.tradenest.server.TradeNestServer 8080",
     "java:gui": "java -cp backend/bin;backend/lib/mysql-connector-j-8.3.0.jar com.tradenest.gui.TradeNestGUI",
     "build": "vite build",
