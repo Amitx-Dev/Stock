@@ -38,6 +38,21 @@ TradeNest is a modern, responsive fintech web application inspired by the look a
 
 ---
 
+## 🔑 Login Credentials
+
+The platform includes pre-configured access accounts for both user personas:
+
+| Portal Role | Email / Login ID | Password | Destination Dashboard |
+| :--- | :--- | :--- | :--- |
+| **Trader** | `trader@tradenest.in` *(or `trader@demo.com`)* | `Trader@123` | `/trader/trading` |
+| **Admin** | `admin@tradenest.in` *(or `admin@demo.com`)* | `Admin@123` | `/admin/users` |
+
+> **Mobile OTP Login:**
+> - Mobile Number: Any 10-digit number (e.g., `9876543210`)
+> - Verification OTP: Any 6-digit code (e.g., `123456`)
+
+---
+
 ## 🛠️ Tech Stack
 
 - **Framework**: React 18 + Vite
