@@ -1,158 +1,173 @@
 import React, { useState } from 'react';
-import { useTrading } from '../../context/TradingContext';
-import { Search, Filter, Download, ArrowUpRight, ArrowDownRight, Calendar } from 'lucide-react';
+import { mockTradeHistory, tradePerformanceStats } from '../../data/mockTrades';
+import { DataTable } from '../../components/common/DataTable';
+import { StatCard } from '../../components/common/StatCard';
+import { Badge } from '../../components/common/Badge';
+import { useToast } from '../../context/ToastContext';
+import { History, Award, AlertTriangle, Download, ArrowUpRight, ArrowDownRight, CheckCircle2 } from 'lucide-react';
 
 export const TradeHistoryPage = () => {
-  const { trades } = useTrading();
-  const [searchTerm, setSearchTerm] = useState('');
-  const [typeFilter, setTypeFilter] = useState('ALL'); // 'ALL', 'BUY', 'SELL'
+  const [trades, setTrades] = useState(mockTradeHistory);
+  const { showToast } = useToast();
 
-  const filteredTrades = trades.filter((t) => {
-    const matchesSearch =
-      (t.symbol && t.symbol.toLowerCase().includes(searchTerm.toLowerCase())) ||
-      (t.companyName && t.companyName.toLowerCase().includes(searchTerm.toLowerCase()));
-    const matchesType = typeFilter === 'ALL' || t.type === typeFilter;
-    return matchesSearch && matchesType;
-  });
-
-  const exportCSV = () => {
-    if (!filteredTrades.length) return;
-    const headers = ['Order ID', 'Stock Symbol', 'Company', 'Type', 'Quantity', 'Price Per Share', 'Total Value', 'Status', 'Timestamp'];
-    const rows = filteredTrades.map(t => [
-      t.id,
-      t.symbol,
-      `"${t.companyName || ''}"`,
-      t.type,
-      t.quantity,
-      t.pricePerShare,
-      t.totalAmount,
-      t.status,
-      t.timestamp
-    ]);
-    const csvContent = 'data:text/csv;charset=utf-8,' + [headers.join(','), ...rows.map(e => e.join(','))].join('\n');
-    const encodedUri = encodeURI(csvContent);
-    const link = document.createElement('a');
-    link.setAttribute('href', encodedUri);
-    link.setAttribute('download', `trade_history_${Date.now()}.csv`);
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+  const handleExport = () => {
+    showToast('Exporting trade log CSV...', 'info');
+    setTimeout(() => {
+      showToast('Trade history CSV downloaded successfully', 'success');
+    }, 700);
   };
+
+  const columns = [
+    {
+      header: 'Trade ID & Date',
+      key: 'id',
+      sortable: true,
+      render: (row) => (
+        <div>
+          <span className="font-bold text-slate-900 dark:text-white font-mono text-xs">{row.id}</span>
+          <p className="text-[10px] text-slate-400 font-mono mt-0.5">{row.date}</p>
+        </div>
+      )
+    },
+    {
+      header: 'Instrument',
+      key: 'stock',
+      sortable: true,
+      render: (row) => (
+        <span className="font-extrabold text-brand-700 dark:text-brand-300 text-xs">
+          {row.stock}
+        </span>
+      )
+    },
+    {
+      header: 'Side',
+      key: 'type',
+      sortable: true,
+      render: (row) => (
+        <Badge variant={row.type === 'BUY' ? 'buy' : 'sell'} size="sm">
+          {row.type}
+        </Badge>
+      )
+    },
+    {
+      header: 'Qty',
+      key: 'qty',
+      sortable: true,
+      align: 'right',
+      render: (row) => <span className="font-mono font-bold text-xs">{row.qty}</span>
+    },
+    {
+      header: 'Executed Price',
+      key: 'price',
+      sortable: true,
+      align: 'right',
+      render: (row) => <span className="font-mono text-xs">₹{row.price.toFixed(2)}</span>
+    },
+    {
+      header: 'Gross Total',
+      key: 'total',
+      sortable: true,
+      align: 'right',
+      render: (row) => <span className="font-mono font-bold text-xs">₹{row.total.toLocaleString()}</span>
+    },
+    {
+      header: 'Realized P&L',
+      key: 'pnl',
+      sortable: true,
+      align: 'right',
+      render: (row) => {
+        const isPos = row.pnl >= 0;
+        return (
+          <span
+            className={`font-mono text-xs font-bold inline-flex items-center ${
+              isPos ? 'text-trade-green' : 'text-trade-red'
+            }`}
+          >
+            {isPos ? '+' : ''}₹{row.pnl.toFixed(2)} ({isPos ? '+' : ''}{row.pnlPercent}%)
+          </span>
+        );
+      }
+    },
+    {
+      header: 'Status',
+      key: 'status',
+      align: 'center',
+      render: (row) => <Badge variant="success" size="sm">{row.status}</Badge>
+    }
+  ];
 
   return (
     <div className="space-y-6">
-      <div className="fintech-card p-4 flex flex-col sm:flex-row items-center justify-between gap-3">
-        <div className="flex flex-1 items-center gap-3 w-full sm:w-auto">
-          {/* Search */}
-          <div className="relative flex-1 sm:max-w-xs">
-            <Search className="w-4 h-4 text-slate-400 absolute left-3 top-2.5" />
-            <input
-              type="text"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              placeholder="Search by symbol or company..."
-              className="w-full bg-slate-950 border border-slate-700/80 rounded-xl py-2 pl-9 pr-3 text-xs text-white placeholder-slate-500 focus:border-cyan-500 focus:outline-none"
-            />
-          </div>
-
-          {/* Type Filter */}
-          <div className="flex items-center gap-1.5 bg-slate-950 border border-slate-700/80 rounded-xl px-2.5 py-1.5">
-            <Filter className="w-3.5 h-3.5 text-slate-400" />
-            <select
-              value={typeFilter}
-              onChange={(e) => setTypeFilter(e.target.value)}
-              className="bg-transparent text-xs text-slate-300 focus:outline-none font-medium cursor-pointer"
-            >
-              <option value="ALL">All Orders</option>
-              <option value="BUY">BUY Orders</option>
-              <option value="SELL">SELL Orders</option>
-            </select>
-          </div>
+      
+      {/* Title */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <h2 className="text-xl font-extrabold text-slate-900 dark:text-white">
+            Trade Execution History & Performance
+          </h2>
+          <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+            Audit trail of filled market and limit orders, realized profits, and win rate ratio.
+          </p>
         </div>
 
-        {/* Export CSV Button */}
         <button
-          onClick={exportCSV}
-          disabled={filteredTrades.length === 0}
-          className="w-full sm:w-auto flex items-center justify-center gap-1.5 px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 hover:text-white font-bold text-xs transition-all disabled:opacity-50"
+          onClick={handleExport}
+          className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 font-bold text-xs shadow-soft transition-all self-start sm:self-auto"
         >
-          <Download className="w-3.5 h-3.5" />
-          <span>Export to CSV</span>
+          <Download className="w-4 h-4 text-slate-500" />
+          <span>Export Trade Log (CSV)</span>
         </button>
       </div>
 
-      {/* Trades Table */}
-      <div className="fintech-card overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full text-left text-xs">
-            <thead className="bg-slate-950/70 border-b border-slate-800 text-slate-400 uppercase tracking-wider font-semibold">
-              <tr>
-                <th className="py-3.5 px-4">Order Ref</th>
-                <th className="py-3.5 px-4">Asset / Stock</th>
-                <th className="py-3.5 px-4">Action</th>
-                <th className="py-3.5 px-4 text-right">Quantity</th>
-                <th className="py-3.5 px-4 text-right">Execution Price</th>
-                <th className="py-3.5 px-4 text-right">Total Consideration</th>
-                <th className="py-3.5 px-4">Status</th>
-                <th className="py-3.5 px-4 text-right">Date & Time</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-800/60 text-slate-200">
-              {filteredTrades.length === 0 ? (
-                <tr>
-                  <td colSpan={8} className="py-8 text-center text-slate-500 text-xs">
-                    No trade executions found in history.
-                  </td>
-                </tr>
-              ) : (
-                filteredTrades.map((t) => {
-                  const isBuy = t.type === 'BUY';
-
-                  return (
-                    <tr key={t.id} className="hover:bg-slate-800/40 transition-colors">
-                      <td className="py-3.5 px-4 font-mono text-slate-400 text-[11px]">
-                        #{t.id}
-                      </td>
-                      <td className="py-3.5 px-4">
-                        <div className="font-bold text-white text-sm">{t.symbol}</div>
-                        <div className="text-[11px] text-slate-400 truncate max-w-[130px]">{t.companyName}</div>
-                      </td>
-                      <td className="py-3.5 px-4">
-                        <span
-                          className={`inline-flex items-center px-2 py-0.5 rounded text-[10px] font-extrabold ${
-                            isBuy
-                              ? 'bg-emerald-950/80 text-emerald-400 border border-emerald-800'
-                              : 'bg-rose-950/80 text-rose-400 border border-rose-800'
-                          }`}
-                        >
-                          {t.type}
-                        </span>
-                      </td>
-                      <td className="py-3.5 px-4 text-right font-mono font-semibold">
-                        {t.quantity} shares
-                      </td>
-                      <td className="py-3.5 px-4 text-right font-mono text-slate-300">
-                        ${t.pricePerShare ? t.pricePerShare.toFixed(2) : '0.00'}
-                      </td>
-                      <td className="py-3.5 px-4 text-right font-mono font-bold text-white">
-                        ${t.totalAmount ? t.totalAmount.toLocaleString(undefined, { minimumFractionDigits: 2 }) : '0.00'}
-                      </td>
-                      <td className="py-3.5 px-4">
-                        <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-mono bg-cyan-950/60 text-cyan-400 border border-cyan-800">
-                          {t.status || 'FILLED'}
-                        </span>
-                      </td>
-                      <td className="py-3.5 px-4 text-right font-mono text-slate-400 text-[11px]">
-                        {t.timestamp}
-                      </td>
-                    </tr>
-                  );
-                })
-              )}
-            </tbody>
-          </table>
-        </div>
+      {/* Summary KPI Cards */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <StatCard
+          title="Win Rate Ratio"
+          value={`${tradePerformanceStats.winRate}%`}
+          change={`${tradePerformanceStats.profitableTrades} wins / ${tradePerformanceStats.lossTrades} losses`}
+          isPositive={true}
+          icon={Award}
+          subtitle="42 filled trades total"
+        />
+        <StatCard
+          title="Best Trade (Profit)"
+          value={tradePerformanceStats.bestTrade.profit}
+          subtitle={`${tradePerformanceStats.bestTrade.stock} on ${tradePerformanceStats.bestTrade.date}`}
+          icon={ArrowUpRight}
+          iconBg="bg-emerald-50 text-trade-green dark:bg-emerald-950/60 dark:text-emerald-300"
+        />
+        <StatCard
+          title="Worst Trade (Loss)"
+          value={tradePerformanceStats.worstTrade.loss}
+          subtitle={`${tradePerformanceStats.worstTrade.stock} on ${tradePerformanceStats.worstTrade.date}`}
+          icon={ArrowDownRight}
+          iconBg="bg-rose-50 text-trade-red dark:bg-rose-950/60 dark:text-rose-300"
+        />
+        <StatCard
+          title="Net Profit Realized"
+          value={`+₹${tradePerformanceStats.totalProfitRealized.toLocaleString()}`}
+          subtitle="After statutory taxes & STT"
+          icon={CheckCircle2}
+          iconBg="bg-purple-50 text-purple-700 dark:bg-purple-950/60 dark:text-purple-300"
+        />
       </div>
+
+      {/* Trade Log DataTable */}
+      <DataTable
+        columns={columns}
+        data={trades}
+        searchKey="stock"
+        searchPlaceholder="Search trades by stock symbol..."
+        filterKey="type"
+        filterLabel="Side"
+        filterOptions={[
+          { label: 'BUY', value: 'BUY' },
+          { label: 'SELL', value: 'SELL' }
+        ]}
+        itemsPerPage={5}
+        emptyMessage="No trade logs found matching query."
+      />
+
     </div>
   );
 };

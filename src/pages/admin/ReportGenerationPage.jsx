@@ -1,168 +1,190 @@
-import React, { useState, useEffect } from 'react';
-import { api } from '../../services/api';
-import { FileText, Download, Printer, CheckCircle, RefreshCw, BarChart } from 'lucide-react';
+import React, { useState } from 'react';
+import { reportTypes, mockReportDatasets } from '../../data/mockReports';
+import { useToast } from '../../context/ToastContext';
+import { FileText, Download, Calendar, Filter, CheckCircle2, ArrowRight } from 'lucide-react';
+import { Badge } from '../../components/common/Badge';
 
 export const ReportGenerationPage = () => {
-  const [reportType, setReportType] = useState('daily_summary');
-  const [reportData, setReportData] = useState(null);
-  const [loading, setLoading] = useState(false);
+  const [selectedType, setSelectedType] = useState('financial');
+  const [dateRange, setDateRange] = useState('7d');
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [reportGenerated, setReportGenerated] = useState(true);
+  const { showToast } = useToast();
 
-  const fetchReport = async (type) => {
-    setLoading(true);
-    setReportType(type);
-    try {
-      const data = await api.generateReport(type);
-      setReportData(data);
-    } finally {
-      setLoading(false);
-    }
+  const handleGenerate = (e) => {
+    e.preventDefault();
+    setIsGenerating(true);
+    setTimeout(() => {
+      setIsGenerating(false);
+      setReportGenerated(true);
+      showToast('Report generated successfully', 'success');
+    }, 600);
   };
 
-  useEffect(() => {
-    fetchReport('daily_summary');
-  }, []);
-
-  const exportCSV = () => {
-    if (!reportData || !reportData.data) return;
-    const sample = reportData.data[0];
-    const keys = Object.keys(sample);
-    const headers = keys.join(',');
-    const rows = reportData.data.map(obj => keys.map(k => `"${obj[k] !== undefined ? obj[k] : ''}"`).join(','));
-    const csvContent = 'data:text/csv;charset=utf-8,' + [headers, ...rows].join('\n');
-    const encodedUri = encodeURI(csvContent);
-    const link = document.createElement('a');
-    link.setAttribute('href', encodedUri);
-    link.setAttribute('download', `${reportType}_report_${Date.now()}.csv`);
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+  const handleDownload = (format) => {
+    showToast(`Downloading ${format.toUpperCase()} report...`, 'info');
+    setTimeout(() => {
+      showToast(`Report downloaded successfully in ${format.toUpperCase()} format`, 'success');
+    }, 800);
   };
 
-  const handlePrint = () => {
-    window.print();
-  };
+  const currentDataset = mockReportDatasets[selectedType] || [];
+  const currentMeta = reportTypes.find((r) => r.id === selectedType);
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-        <div>
-          <h2 className="text-xl font-black tracking-tight text-white">Financial & Compliance Reports</h2>
-          <p className="text-xs text-slate-400">
-            Generate standardized audit summaries, participant activity reports, and fee turnover reconciliations.
-          </p>
-        </div>
-
-        {/* Action Buttons for Export */}
-        <div className="flex items-center gap-2">
-          <button
-            onClick={exportCSV}
-            disabled={!reportData}
-            className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-cyan-600 hover:bg-cyan-500 disabled:opacity-50 text-white font-bold text-xs shadow-md shadow-cyan-600/20 transition-all"
-          >
-            <Download className="w-3.5 h-3.5" />
-            <span>Export to CSV</span>
-          </button>
-          <button
-            onClick={handlePrint}
-            className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 hover:text-white font-bold text-xs border border-slate-700 transition-all"
-          >
-            <Printer className="w-3.5 h-3.5" />
-            <span>Print / PDF</span>
-          </button>
-        </div>
+      
+      {/* Title */}
+      <div>
+        <h2 className="text-xl font-extrabold text-slate-900 dark:text-white">
+          Regulatory & Operational Report Generation
+        </h2>
+        <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+          Generate audit-ready financial ledgers, clearing turnovers, client onboarding telemetry, and system availability reports.
+        </p>
       </div>
 
-      {/* Report Type Selector Buttons */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-        <button
-          onClick={() => fetchReport('daily_summary')}
-          className={`p-4 rounded-xl border text-left transition-all ${
-            reportType === 'daily_summary'
-              ? 'bg-cyan-950/60 border-cyan-500 text-cyan-300 shadow-md shadow-cyan-950/40'
-              : 'bg-slate-900 border-slate-800 text-slate-400 hover:bg-slate-800 hover:text-white'
-          }`}
-        >
-          <div className="font-extrabold text-sm mb-1 text-white">Daily Trading Summary</div>
-          <div className="text-[11px] text-slate-400">Overall order volume, top active equities, and trade count.</div>
-        </button>
+      {/* Control Card */}
+      <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-2xl p-6 shadow-soft">
+        <form onSubmit={handleGenerate} className="space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            
+            {/* Report Type Selector */}
+            <div className="md:col-span-2">
+              <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-2">
+                Select Report Type
+              </label>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                {reportTypes.map((type) => (
+                  <button
+                    key={type.id}
+                    type="button"
+                    onClick={() => setSelectedType(type.id)}
+                    className={`p-3.5 rounded-xl border text-left transition-all ${
+                      selectedType === type.id
+                        ? 'border-brand-500 bg-brand-50/60 dark:bg-brand-950/40 ring-2 ring-brand-500/20'
+                        : 'border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 bg-white dark:bg-slate-850'
+                    }`}
+                  >
+                    <div className="flex items-center justify-between">
+                      <span className="font-bold text-sm text-slate-900 dark:text-white">
+                        {type.name}
+                      </span>
+                      {selectedType === type.id && (
+                        <CheckCircle2 className="w-4 h-4 text-brand-600 dark:text-brand-400" />
+                      )}
+                    </div>
+                    <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 line-clamp-2">
+                      {type.description}
+                    </p>
+                  </button>
+                ))}
+              </div>
+            </div>
 
-        <button
-          onClick={() => fetchReport('user_activity')}
-          className={`p-4 rounded-xl border text-left transition-all ${
-            reportType === 'user_activity'
-              ? 'bg-cyan-950/60 border-cyan-500 text-cyan-300 shadow-md shadow-cyan-950/40'
-              : 'bg-slate-900 border-slate-800 text-slate-400 hover:bg-slate-800 hover:text-white'
-          }`}
-        >
-          <div className="font-extrabold text-sm mb-1 text-white">User Activity & Compliance</div>
-          <div className="text-[11px] text-slate-400">Registered trader states, active accounts, and administrative logs.</div>
-        </button>
+            {/* Date Range Picker */}
+            <div>
+              <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-2">
+                Time Period & Date Range
+              </label>
+              <div className="space-y-3">
+                <select
+                  value={dateRange}
+                  onChange={(e) => setDateRange(e.target.value)}
+                  className="w-full px-3.5 py-2.5 text-sm rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:border-brand-500"
+                >
+                  <option value="1d">Today (Current Trading Session)</option>
+                  <option value="7d">Last 7 Days (Weekly Settlement)</option>
+                  <option value="30d">Last 30 Days (Monthly Ledger)</option>
+                  <option value="90d">Current Quarter (Q3 FY26)</option>
+                  <option value="custom">Custom Date Range</option>
+                </select>
 
-        <button
-          onClick={() => fetchReport('revenue')}
-          className={`p-4 rounded-xl border text-left transition-all ${
-            reportType === 'revenue'
-              ? 'bg-cyan-950/60 border-cyan-500 text-cyan-300 shadow-md shadow-cyan-950/40'
-              : 'bg-slate-900 border-slate-800 text-slate-400 hover:bg-slate-800 hover:text-white'
-          }`}
-        >
-          <div className="font-extrabold text-sm mb-1 text-white">Platform Brokerage & Revenue</div>
-          <div className="text-[11px] text-slate-400">Trading fee commission collections and turnover audit.</div>
-        </button>
+                <div className="p-3 bg-slate-50 dark:bg-slate-800/60 rounded-xl border border-slate-200/60 dark:border-slate-700 text-xs text-slate-500">
+                  <div className="flex items-center gap-2 mb-1">
+                    <Calendar className="w-3.5 h-3.5 text-brand-600" />
+                    <span className="font-semibold text-slate-700 dark:text-slate-300">Selected Interval</span>
+                  </div>
+                  <span>03 Oct 2025 - 09 Oct 2025 (5 Exchange Trading Days)</span>
+                </div>
+
+                <button
+                  type="submit"
+                  disabled={isGenerating}
+                  className="w-full py-2.5 px-4 rounded-xl bg-brand-700 hover:bg-brand-800 text-white font-bold text-xs shadow-md shadow-brand-700/20 transition-all flex items-center justify-center gap-2"
+                >
+                  {isGenerating ? (
+                    <>
+                      <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                      <span>Generating Report...</span>
+                    </>
+                  ) : (
+                    <>
+                      <FileText className="w-4 h-4" />
+                      <span>Generate Report Preview</span>
+                    </>
+                  )}
+                </button>
+              </div>
+            </div>
+
+          </div>
+        </form>
       </div>
 
-      {/* Generated Report Display */}
-      {loading ? (
-        <div className="fintech-card p-12 text-center text-slate-400 text-xs">
-          Generating cryptographic report output...
-        </div>
-      ) : reportData ? (
-        <div className="fintech-card overflow-hidden">
-          {/* Header */}
-          <div className="p-5 border-b border-slate-800 bg-slate-950/60 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+      {/* Preview Table & Download Actions */}
+      {reportGenerated && (
+        <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-2xl p-6 shadow-soft space-y-4">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-4 border-b border-slate-100 dark:border-slate-800 gap-3">
             <div>
               <div className="flex items-center gap-2">
-                <FileText className="w-5 h-5 text-cyan-400" />
-                <h3 className="text-base font-extrabold text-white">{reportData.title}</h3>
+                <h3 className="text-base font-bold text-slate-900 dark:text-white">
+                  Preview: {currentMeta?.name}
+                </h3>
+                <Badge variant="brand" size="sm">Audit Ready</Badge>
               </div>
-              <span className="text-[11px] text-slate-500 block mt-0.5">
-                Generated: {reportData.generatedAt} | System Clearance: Level 1
-              </span>
+              <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                Showing computed aggregations for compliance period {dateRange.toUpperCase()}.
+              </p>
             </div>
-            <span className="px-2.5 py-1 rounded-full text-[10px] font-mono bg-emerald-950 text-emerald-400 border border-emerald-800">
-              AUDITED
-            </span>
+
+            {/* Export Buttons */}
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => handleDownload('csv')}
+                className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-700 text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
+              >
+                <Download className="w-3.5 h-3.5 text-slate-500" />
+                <span>Download CSV</span>
+              </button>
+              <button
+                onClick={() => handleDownload('pdf')}
+                className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-brand-700 hover:bg-brand-800 text-white text-xs font-bold shadow-sm transition-all"
+              >
+                <Download className="w-3.5 h-3.5" />
+                <span>Download PDF</span>
+              </button>
+            </div>
           </div>
 
-          {/* Key Metrics Strip */}
-          <div className="grid grid-cols-2 md:grid-cols-4 divide-x divide-y md:divide-y-0 divide-slate-800 border-b border-slate-800 bg-slate-900/50">
-            {reportData.metrics?.map((m, idx) => (
-              <div key={idx} className="p-4">
-                <span className="text-[10px] text-slate-400 uppercase font-semibold block">{m.label}</span>
-                <span className="text-lg font-black text-white mt-1 block">{m.value}</span>
-              </div>
-            ))}
-          </div>
-
-          {/* Report Data Table */}
+          {/* Dynamic Dataset Table */}
           <div className="overflow-x-auto">
             <table className="w-full text-left text-xs">
-              <thead className="bg-slate-950/80 border-b border-slate-800 text-slate-400 uppercase tracking-wider font-semibold">
+              <thead className="bg-slate-50 dark:bg-slate-800/60 text-slate-600 dark:text-slate-300 uppercase tracking-wider font-semibold border-b border-slate-100 dark:border-slate-800">
                 <tr>
-                  {reportData.data && reportData.data.length > 0 &&
-                    Object.keys(reportData.data[0]).map((col) => (
-                      <th key={col} className="py-3 px-4 capitalize">
-                        {col.replace(/([A-Z])/g, ' $1')}
-                      </th>
-                    ))}
+                  {Object.keys(currentDataset[0] || {}).map((colKey) => (
+                    <th key={colKey} className="py-3 px-4">
+                      {colKey.replace(/([A-Z])/g, ' $1').replace(/^./, (str) => str.toUpperCase())}
+                    </th>
+                  ))}
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-800/60 text-slate-200">
-                {reportData.data?.map((row, rIdx) => (
-                  <tr key={rIdx} className="hover:bg-slate-800/30 transition-colors">
+              <tbody className="divide-y divide-slate-100 dark:divide-slate-800 text-slate-700 dark:text-slate-300">
+                {currentDataset.map((row, idx) => (
+                  <tr key={idx} className="hover:bg-slate-50/60 dark:hover:bg-slate-800/30">
                     {Object.values(row).map((val, cIdx) => (
-                      <td key={cIdx} className="py-3 px-4 font-mono text-slate-300 text-[11px]">
-                        {typeof val === 'object' ? JSON.stringify(val) : String(val)}
+                      <td key={cIdx} className="py-3.5 px-4 font-mono">
+                        {String(val)}
                       </td>
                     ))}
                   </tr>
@@ -170,8 +192,14 @@ export const ReportGenerationPage = () => {
               </tbody>
             </table>
           </div>
+
+          <div className="pt-2 flex justify-between items-center text-[11px] text-slate-400">
+            <span>Generated at: {new Date().toLocaleTimeString()} IST</span>
+            <span>Cryptographic Hash: SHA256: 7f83b1657ff1fc53...</span>
+          </div>
         </div>
-      ) : null}
+      )}
+
     </div>
   );
 };

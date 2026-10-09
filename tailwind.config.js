@@ -8,53 +8,49 @@ export default {
   theme: {
     extend: {
       colors: {
-        altpurple: {
-          50: '#F5F3FF',
-          100: '#EDE9FE',
-          200: '#DDD6FE',
-          300: '#C4B5FD',
-          400: '#A78BFA',
-          500: '#8B5CF6',
-          600: '#7C3AED',
-          700: '#6D28D9',
-          800: '#5B21B6',
-          900: '#4C1D95',
-          brand: '#6366F1',
-          accent: '#6C5DD3'
+        brand: {
+          50: '#faf5ff',
+          100: '#f3e8ff',
+          200: '#e9d8fd',
+          300: '#d6bcfa',
+          400: '#b794f4',
+          500: '#805ad5',
+          600: '#6b21a8',
+          700: '#5F259F', // Upstox signature rich purple
+          800: '#4c1d95',
+          900: '#320f5c',
+          950: '#1d0637',
         },
-        fintech: {
-          dark: '#0a0e17',
-          darker: '#06090e',
-          card: '#111827',
-          cardBorder: '#1f2937',
-          accent: '#6366f1',
-          accentHover: '#4f46e5',
-          teal: '#06b6d4',
-          gain: '#10b981',
-          gainBg: 'rgba(16, 185, 129, 0.1)',
-          loss: '#f43f5e',
-          lossBg: 'rgba(244, 63, 94, 0.1)',
-          muted: '#9ca3af',
+        trade: {
+          green: '#00b386', // vibrant gain green
+          'green-light': '#e6f7f2',
+          'green-dark': '#008f6b',
+          red: '#eb5b3c', // vibrant loss red
+          'red-light': '#fef0ec',
+          'red-dark': '#c84326',
         }
       },
       fontFamily: {
         sans: ['Inter', 'system-ui', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'sans-serif'],
-        mono: ['JetBrains Mono', 'Fira Code', 'Courier New', 'monospace'],
       },
-      animation: {
-        'pulse-subtle': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
-        'flash-gain': 'flashGreen 1.2s ease-out',
-        'flash-loss': 'flashRed 1.2s ease-out',
+      boxShadow: {
+        'soft': '0 2px 15px -3px rgba(0, 0, 0, 0.07), 0 10px 20px -2px rgba(0, 0, 0, 0.04)',
+        'card': '0 4px 20px -2px rgba(95, 37, 159, 0.08), 0 2px 6px -1px rgba(0, 0, 0, 0.04)',
+        'glow': '0 0 25px -5px rgba(95, 37, 159, 0.35)',
       },
       keyframes: {
-        flashGreen: {
-          '0%': { backgroundColor: 'rgba(16, 185, 129, 0.35)', borderColor: '#10b981' },
-          '100%': { backgroundColor: 'transparent' },
+        ticker: {
+          '0%': { transform: 'translateX(0%)' },
+          '100%': { transform: 'translateX(-50%)' },
         },
-        flashRed: {
-          '0%': { backgroundColor: 'rgba(244, 63, 94, 0.35)', borderColor: '#f43f5e' },
-          '100%': { backgroundColor: 'transparent' },
+        pulseSlow: {
+          '0%, 100%': { opacity: '1' },
+          '50%': { opacity: '0.4' },
         }
+      },
+      animation: {
+        ticker: 'ticker 28s linear infinite',
+        'pulse-slow': 'pulseSlow 2.5s cubic-bezier(0.4, 0, 0.6, 1) infinite',
       }
     },
   },

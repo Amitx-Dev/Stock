@@ -1,137 +1,145 @@
 import React, { useState } from 'react';
-import { useAuth } from '../../context/AuthContext';
+import { Link, useLocation } from 'react-router-dom';
+import { TrendingUp, Sun, Moon, Menu, X, ArrowRight, ShieldCheck, ChevronDown } from 'lucide-react';
 import { useTheme } from '../../context/ThemeContext';
-import { useTrading } from '../../context/TradingContext';
-import {
-  Activity,
-  Sun,
-  Moon,
-  Wallet,
-  Bell,
-  LogOut,
-  Menu,
-  X,
-  User as UserIcon,
-  ShieldAlert,
-  Plus
-} from 'lucide-react';
-import { DepositModal } from '../trader/DepositModal';
+import { useAuth } from '../../context/AuthContext';
 
-export const Navbar = ({ onToggleSidebar, activeTab, setActiveTab }) => {
-  const { user, logout, isTrader } = useAuth();
+export const Navbar = () => {
   const { isDark, toggleTheme } = useTheme();
-  const { wallet, unreadAlertsCount } = useTrading();
-  const [showDepositModal, setShowDepositModal] = useState(false);
+  const { currentUser, role } = useAuth();
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const location = useLocation();
+
+  const navLinks = [
+    { name: 'Products', href: '#products' },
+    { name: 'Pricing', href: '#pricing' },
+    { name: 'Markets', href: '#markets' },
+    { name: 'Learn', href: '#why-us' },
+    { name: 'Support', href: '#faq' },
+  ];
 
   return (
-    <>
-      <header className="sticky top-0 z-30 bg-slate-900/90 border-b border-slate-800 backdrop-blur-md">
-        <div className="flex items-center justify-between px-4 lg:px-6 h-16">
-          {/* Left: Mobile hamburger & Brand */}
-          <div className="flex items-center gap-3">
-            <button
-              onClick={onToggleSidebar}
-              className="lg:hidden p-2 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 focus:outline-none"
-              aria-label="Toggle Navigation"
-            >
-              <Menu className="w-5 h-5" />
-            </button>
-
-            <div className="flex items-center gap-2.5 cursor-pointer">
-              <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-cyan-600 to-blue-500 flex items-center justify-center text-white shadow-lg shadow-cyan-500/20">
-                <Activity className="w-5 h-5 stroke-[2.5]" />
-              </div>
-              <div className="hidden sm:block">
-                <span className="text-lg font-black tracking-tight text-white">
-                  Trade<span className="text-cyan-400">Nova</span>
-                </span>
-                <span className="block text-[10px] text-slate-400 -mt-1 font-mono uppercase tracking-widest">
-                  Fintech Platform
-                </span>
-              </div>
+    <header className="sticky top-0 z-40 w-full bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border-b border-slate-200/80 dark:border-slate-800 transition-colors">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex items-center justify-between h-16 sm:h-20">
+          
+          {/* Logo */}
+          <Link to="/" className="flex items-center gap-2.5 group">
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-brand-700 to-indigo-500 flex items-center justify-center text-white shadow-md shadow-brand-700/20 group-hover:scale-105 transition-transform">
+              <TrendingUp className="w-5 h-5" />
             </div>
-
-            {/* Market Status Pill */}
-            <div className="hidden md:flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-950/70 border border-emerald-800 text-[11px] text-emerald-400 font-medium ml-4">
-              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-              <span>Market Live</span>
+            <div className="flex flex-col">
+              <span className="text-xl font-extrabold tracking-tight bg-gradient-to-r from-brand-700 via-indigo-700 to-purple-600 dark:from-brand-300 dark:to-indigo-300 bg-clip-text text-transparent">
+                TradeNest
+              </span>
+              <span className="text-[10px] font-semibold text-slate-400 tracking-widest uppercase -mt-1">
+                Fintech Trading
+              </span>
             </div>
-          </div>
+          </Link>
 
-          {/* Right: Actions */}
-          <div className="flex items-center gap-2 sm:gap-4">
-            {/* Wallet Cash Balance (Trader only) */}
-            {isTrader && (
-              <div className="flex items-center gap-2 bg-slate-800/80 border border-slate-700/80 rounded-xl px-3 py-1.5 shadow-inner">
-                <Wallet className="w-4 h-4 text-cyan-400 hidden sm:inline" />
-                <div className="text-left">
-                  <div className="text-[10px] text-slate-400 uppercase font-semibold leading-none">
-                    Cash Balance
-                  </div>
-                  <div className="text-xs sm:text-sm font-bold text-emerald-400 leading-tight">
-                    ${wallet.cashBalance.toLocaleString(undefined, { minimumFractionDigits: 2 })}
-                  </div>
-                </div>
-                <button
-                  onClick={() => setShowDepositModal(true)}
-                  className="p-1 rounded-md bg-cyan-600 hover:bg-cyan-500 text-white transition-colors"
-                  title="Deposit Funds"
-                >
-                  <Plus className="w-3.5 h-3.5" />
-                </button>
-              </div>
-            )}
-
-            {/* Notification Bell (Trader alerts) */}
-            {isTrader && (
-              <button
-                onClick={() => setActiveTab && setActiveTab('alerts')}
-                className="relative p-2 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
-                title="Price Alerts"
+          {/* Desktop Nav Links */}
+          <nav className="hidden md:flex items-center gap-8">
+            {navLinks.map((link) => (
+              <a
+                key={link.name}
+                href={link.href}
+                className="text-sm font-medium text-slate-600 hover:text-brand-700 dark:text-slate-300 dark:hover:text-brand-400 transition-colors"
               >
-                <Bell className="w-5 h-5" />
-                {unreadAlertsCount > 0 && (
-                  <span className="absolute top-1.5 right-1.5 w-4 h-4 rounded-full bg-rose-500 text-white text-[10px] font-bold flex items-center justify-center animate-bounce">
-                    {unreadAlertsCount}
-                  </span>
-                )}
-              </button>
-            )}
+                {link.name}
+              </a>
+            ))}
+          </nav>
 
-            {/* Dark / Light Mode Toggle */}
+          {/* Right Actions */}
+          <div className="hidden md:flex items-center gap-3.5">
+            {/* Theme Toggle */}
             <button
               onClick={toggleTheme}
-              className="p-2 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
-              title={isDark ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
+              className="p-2 rounded-xl text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 bg-slate-100 dark:bg-slate-800 transition-colors"
+              aria-label="Toggle theme"
             >
-              {isDark ? <Sun className="w-5 h-5 text-amber-400" /> : <Moon className="w-5 h-5 text-slate-300" />}
+              {isDark ? <Sun className="w-4 h-4 text-amber-400" /> : <Moon className="w-4 h-4" />}
             </button>
 
-            {/* User Profile Info */}
-            <div className="flex items-center gap-2 pl-2 border-l border-slate-800">
-              <div className="w-8 h-8 rounded-full bg-slate-800 border border-slate-700 flex items-center justify-center text-cyan-400 font-bold text-xs uppercase">
-                {user?.name ? user.name.charAt(0) : 'U'}
-              </div>
-              <div className="hidden lg:block text-left text-xs">
-                <div className="font-semibold text-white leading-tight">{user?.name}</div>
-                <div className="text-[10px] font-mono text-cyan-400 uppercase tracking-wider">{user?.role}</div>
-              </div>
-              <button
-                onClick={logout}
-                className="p-1.5 rounded-lg text-slate-400 hover:text-rose-400 hover:bg-slate-800 transition-colors ml-1"
-                title="Logout"
+            {currentUser ? (
+              <Link
+                to={role?.toLowerCase() === 'admin' ? '/admin/users' : '/trader/trading'}
+                className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-brand-700 hover:bg-brand-800 text-white text-sm font-medium shadow-sm transition-all"
               >
-                <LogOut className="w-4 h-4" />
-              </button>
-            </div>
+                <span>Go to {role} Portal</span>
+                <ArrowRight className="w-4 h-4" />
+              </Link>
+            ) : (
+              <>
+                <Link
+                  to="/login"
+                  className="px-4 py-2 text-sm font-semibold text-slate-700 dark:text-slate-200 hover:text-brand-700 dark:hover:text-brand-400 transition-colors"
+                >
+                  Login
+                </Link>
+                <Link
+                  to="/login?role=trader"
+                  className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-brand-700 hover:bg-brand-800 text-white text-sm font-semibold shadow-md shadow-brand-700/25 hover:shadow-brand-700/40 hover:-translate-y-0.5 transition-all"
+                >
+                  <span>Open Free Account</span>
+                  <ArrowRight className="w-4 h-4" />
+                </Link>
+              </>
+            )}
+          </div>
+
+          {/* Mobile Menu Button */}
+          <div className="flex md:hidden items-center gap-2">
+            <button
+              onClick={toggleTheme}
+              className="p-2 rounded-xl text-slate-500 bg-slate-100 dark:bg-slate-800"
+              aria-label="Toggle theme"
+            >
+              {isDark ? <Sun className="w-4 h-4 text-amber-400" /> : <Moon className="w-4 h-4" />}
+            </button>
+            <button
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              className="p-2 rounded-xl text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800"
+              aria-label="Toggle navigation menu"
+            >
+              {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+            </button>
           </div>
         </div>
-      </header>
+      </div>
 
-      {/* Deposit Cash Modal */}
-      {showDepositModal && (
-        <DepositModal isOpen={showDepositModal} onClose={() => setShowDepositModal(false)} />
+      {/* Mobile Drawer */}
+      {mobileMenuOpen && (
+        <div className="md:hidden border-t border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-4 pt-3 pb-6 space-y-3">
+          {navLinks.map((link) => (
+            <a
+              key={link.name}
+              href={link.href}
+              onClick={() => setMobileMenuOpen(false)}
+              className="block px-3 py-2 text-base font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-lg"
+            >
+              {link.name}
+            </a>
+          ))}
+          <div className="pt-3 border-t border-slate-100 dark:border-slate-800 flex flex-col gap-2">
+            <Link
+              to="/login"
+              onClick={() => setMobileMenuOpen(false)}
+              className="w-full text-center py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 font-semibold text-slate-700 dark:text-slate-200"
+            >
+              Login
+            </Link>
+            <Link
+              to="/login?role=trader"
+              onClick={() => setMobileMenuOpen(false)}
+              className="w-full text-center py-2.5 rounded-xl bg-brand-700 text-white font-semibold shadow-md shadow-brand-700/20"
+            >
+              Open Free Account
+            </Link>
+          </div>
+        </div>
       )}
-    </>
+    </header>
   );
 };

@@ -1,131 +1,220 @@
-import React, { useState, useEffect } from 'react';
-import { api } from '../../services/api';
-import { VolumeLineChart } from '../../components/admin/VolumeLineChart';
-import { TopTradedBarChart } from '../../components/admin/TopTradedBarChart';
-import { Activity, ArrowUpRight, ArrowDownRight, RefreshCw } from 'lucide-react';
+import React from 'react';
+import {
+  tradesPerHourData,
+  tradeVolumeTrendData,
+  buySellSplitData,
+  systemPerformanceData,
+  activityKpis
+} from '../../data/mockTradeActivity';
+import { StatCard } from '../../components/common/StatCard';
+import { ChartCard } from '../../components/common/ChartCard';
+import {
+  BarChart,
+  Bar,
+  LineChart,
+  Line,
+  AreaChart,
+  Area,
+  PieChart,
+  Pie,
+  Cell,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+  Legend
+} from 'recharts';
+import { Activity, Users, DollarSign, AlertOctagon, TrendingUp } from 'lucide-react';
+import { useTheme } from '../../context/ThemeContext';
 
 export const TradeActivityPage = () => {
-  const [allTrades, setAllTrades] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const { isDark } = useTheme();
 
-  const fetchTrades = async () => {
-    try {
-      const data = await api.getTrades(null); // null retrieves across all users
-      setAllTrades(data);
-    } finally {
-      setLoading(false);
-    }
+  const gridColor = isDark ? '#334155' : '#f1f5f9';
+  const textColor = isDark ? '#94a3b8' : '#64748b';
+  const tooltipStyle = {
+    backgroundColor: isDark ? '#0f172a' : '#ffffff',
+    borderColor: isDark ? '#1e293b' : '#e2e8f0',
+    borderRadius: '12px',
+    boxShadow: '0 4px 20px -2px rgba(0,0,0,0.15)',
+    color: isDark ? '#f8fafc' : '#0f172a',
+    fontSize: '12px'
   };
-
-  useEffect(() => {
-    fetchTrades();
-  }, []);
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
-        <div>
-          <h2 className="text-xl font-black tracking-tight text-white">Platform Trade Surveillance & Activity</h2>
-          <p className="text-xs text-slate-400">
-            Real-time trade order execution monitor, volume trends, and security audit log.
-          </p>
-        </div>
-        <button
-          onClick={fetchTrades}
-          className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-900 border border-slate-700 text-slate-300 hover:text-white text-xs font-semibold"
-        >
-          <RefreshCw className="w-3.5 h-3.5" />
-          <span>Refresh Feed</span>
-        </button>
+      
+      {/* Title */}
+      <div>
+        <h2 className="text-xl font-extrabold text-slate-900 dark:text-white">
+          Real-Time Trade Activity Monitoring
+        </h2>
+        <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+          Live order routing throughput, turnover volume trends, order execution breakdown, and system latencies.
+        </p>
       </div>
 
-      {/* Visual Analytics Grid: Line Chart + Bar Chart */}
+      {/* KPI Cards */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <StatCard
+          title="Total Trades Today"
+          value={activityKpis.totalTradesToday}
+          change={activityKpis.totalTradesChange}
+          isPositive={true}
+          icon={Activity}
+        />
+        <StatCard
+          title="Active Users"
+          value={activityKpis.activeUsers}
+          change={activityKpis.activeUsersChange}
+          isPositive={true}
+          icon={Users}
+          iconBg="bg-blue-50 text-blue-700 dark:bg-blue-950/60 dark:text-blue-300"
+        />
+        <StatCard
+          title="Turnover Volume"
+          value={activityKpis.totalVolume}
+          change={activityKpis.totalVolumeChange}
+          isPositive={true}
+          icon={TrendingUp}
+          iconBg="bg-purple-50 text-purple-700 dark:bg-purple-950/60 dark:text-purple-300"
+        />
+        <StatCard
+          title="Failed / Rejected"
+          value={activityKpis.failedOrders}
+          change={activityKpis.failedOrdersRate}
+          isPositive={false}
+          icon={AlertOctagon}
+          iconBg="bg-rose-50 text-rose-700 dark:bg-rose-950/60 dark:text-rose-300"
+        />
+      </div>
+
+      {/* Charts Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <VolumeLineChart />
-        <TopTradedBarChart />
-      </div>
-
-      {/* Real-time Platform Trades Table */}
-      <div className="fintech-card overflow-hidden">
-        <div className="p-4 border-b border-slate-800 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <span className="w-2.5 h-2.5 rounded-full bg-cyan-400 animate-pulse" />
-            <h3 className="text-xs font-bold uppercase tracking-wider text-white">
-              Global Platform Orders (All Participants)
-            </h3>
+        
+        {/* Chart 1: Trades Per Hour (Bar) */}
+        <ChartCard
+          title="Trades Executed Per Hour"
+          subtitle="Distribution across market session (09:15 - 15:30 IST)"
+        >
+          <div className="h-72 w-full">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={tradesPerHourData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke={gridColor} vertical={false} />
+                <XAxis dataKey="hour" stroke={textColor} fontSize={11} tickLine={false} />
+                <YAxis stroke={textColor} fontSize={11} tickLine={false} />
+                <Tooltip contentStyle={tooltipStyle} />
+                <Bar dataKey="trades" name="Orders Filled" fill="#5F259F" radius={[6, 6, 0, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
           </div>
-          <span className="text-[10px] font-mono text-slate-500">
-            {allTrades.length} Recorded Transactions
-          </span>
-        </div>
+        </ChartCard>
 
-        <div className="overflow-x-auto">
-          <table className="w-full text-left text-xs">
-            <thead className="bg-slate-950/70 border-b border-slate-800 text-slate-400 uppercase tracking-wider font-semibold">
-              <tr>
-                <th className="py-3.5 px-4">Order Ref</th>
-                <th className="py-3.5 px-4">Participant</th>
-                <th className="py-3.5 px-4">Asset / Stock</th>
-                <th className="py-3.5 px-4">Order Type</th>
-                <th className="py-3.5 px-4 text-right">Shares</th>
-                <th className="py-3.5 px-4 text-right">Price</th>
-                <th className="py-3.5 px-4 text-right">Total Consideration</th>
-                <th className="py-3.5 px-4 text-right">Timestamp</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-800/60 text-slate-200">
-              {allTrades.length === 0 ? (
-                <tr>
-                  <td colSpan={8} className="py-8 text-center text-slate-500 text-xs">
-                    No trade executions recorded on the exchange.
-                  </td>
-                </tr>
-              ) : (
-                allTrades.map((t) => {
-                  const isBuy = t.type === 'BUY';
-                  return (
-                    <tr key={t.id} className="hover:bg-slate-800/40 transition-colors">
-                      <td className="py-3.5 px-4 font-mono text-slate-400 text-[11px]">
-                        #{t.id}
-                      </td>
-                      <td className="py-3.5 px-4 font-bold text-white">
-                        {t.userName || `User #${t.userId}`}
-                      </td>
-                      <td className="py-3.5 px-4">
-                        <div className="font-extrabold text-white text-sm">{t.symbol}</div>
-                        <div className="text-[11px] text-slate-400 truncate max-w-[120px]">{t.companyName}</div>
-                      </td>
-                      <td className="py-3.5 px-4">
-                        <span
-                          className={`inline-flex items-center px-2 py-0.5 rounded text-[10px] font-black ${
-                            isBuy
-                              ? 'bg-emerald-950/80 text-emerald-400 border border-emerald-800'
-                              : 'bg-rose-950/80 text-rose-400 border border-rose-800'
-                          }`}
-                        >
-                          {t.type}
-                        </span>
-                      </td>
-                      <td className="py-3.5 px-4 text-right font-mono font-semibold">
-                        {t.quantity}
-                      </td>
-                      <td className="py-3.5 px-4 text-right font-mono text-slate-300">
-                        ${t.pricePerShare ? t.pricePerShare.toFixed(2) : '0.00'}
-                      </td>
-                      <td className="py-3.5 px-4 text-right font-mono font-bold text-white">
-                        ${t.totalAmount ? t.totalAmount.toLocaleString(undefined, { minimumFractionDigits: 2 }) : '0.00'}
-                      </td>
-                      <td className="py-3.5 px-4 text-right font-mono text-slate-400 text-[11px]">
-                        {t.timestamp}
-                      </td>
-                    </tr>
-                  );
-                })
-              )}
-            </tbody>
-          </table>
-        </div>
+        {/* Chart 2: Trade Volume Trend (Area/Line) */}
+        <ChartCard
+          title="Turnover Volume Trend (₹ Cr)"
+          subtitle="Cumulative market turnover in Crores"
+        >
+          <div className="h-72 w-full">
+            <ResponsiveContainer width="100%" height="100%">
+              <AreaChart data={tradeVolumeTrendData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                <defs>
+                  <linearGradient id="volumeGrad" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#805ad5" stopOpacity={0.4} />
+                    <stop offset="95%" stopColor="#805ad5" stopOpacity={0.0} />
+                  </linearGradient>
+                </defs>
+                <CartesianGrid strokeDasharray="3 3" stroke={gridColor} vertical={false} />
+                <XAxis dataKey="time" stroke={textColor} fontSize={11} tickLine={false} />
+                <YAxis stroke={textColor} fontSize={11} tickLine={false} />
+                <Tooltip contentStyle={tooltipStyle} formatter={(v) => [`₹${v} Cr`, 'Turnover']} />
+                <Area
+                  type="monotone"
+                  dataKey="volume"
+                  stroke="#5F259F"
+                  strokeWidth={2.5}
+                  fillOpacity={1}
+                  fill="url(#volumeGrad)"
+                />
+              </AreaChart>
+            </ResponsiveContainer>
+          </div>
+        </ChartCard>
+
+        {/* Chart 3: Buy vs Sell Split (Donut) */}
+        <ChartCard
+          title="Buy vs. Sell Orders Ratio"
+          subtitle="Breakdown of executed retail and institutional flow"
+        >
+          <div className="h-72 w-full flex items-center justify-center">
+            <ResponsiveContainer width="100%" height="100%">
+              <PieChart>
+                <Pie
+                  data={buySellSplitData}
+                  cx="50%"
+                  cy="50%"
+                  innerRadius={65}
+                  outerRadius={95}
+                  paddingAngle={5}
+                  dataKey="value"
+                >
+                  {buySellSplitData.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={entry.color} />
+                  ))}
+                </Pie>
+                <Tooltip contentStyle={tooltipStyle} />
+                <Legend
+                  verticalAlign="bottom"
+                  height={36}
+                  formatter={(val, entry) => (
+                    <span className="text-xs font-semibold text-slate-700 dark:text-slate-300">
+                      {val} ({((entry.payload.value / 163600) * 100).toFixed(1)}%)
+                    </span>
+                  )}
+                />
+              </PieChart>
+            </ResponsiveContainer>
+          </div>
+        </ChartCard>
+
+        {/* Chart 4: System Performance (Latency & CPU) */}
+        <ChartCard
+          title="System Performance & Latency"
+          subtitle="Execution Gateway Latency (ms) vs CPU Utilization (%)"
+        >
+          <div className="h-72 w-full">
+            <ResponsiveContainer width="100%" height="100%">
+              <LineChart data={systemPerformanceData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke={gridColor} vertical={false} />
+                <XAxis dataKey="time" stroke={textColor} fontSize={11} tickLine={false} />
+                <YAxis stroke={textColor} fontSize={11} tickLine={false} />
+                <Tooltip contentStyle={tooltipStyle} />
+                <Legend verticalAlign="bottom" height={36} />
+                <Line
+                  type="monotone"
+                  dataKey="latency"
+                  name="Latency (ms)"
+                  stroke="#00b386"
+                  strokeWidth={2.5}
+                  dot={{ r: 4 }}
+                />
+                <Line
+                  type="monotone"
+                  dataKey="cpu"
+                  name="CPU Load (%)"
+                  stroke="#3b82f6"
+                  strokeWidth={2}
+                  strokeDasharray="4 4"
+                  dot={{ r: 3 }}
+                />
+              </LineChart>
+            </ResponsiveContainer>
+          </div>
+        </ChartCard>
+
       </div>
+
     </div>
   );
 };
