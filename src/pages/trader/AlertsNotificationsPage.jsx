@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { initialAlerts, initialNotifications } from '../../data/mockAlerts';
 import { mockStocks } from '../../data/mockStocks';
+import { api } from '../../services/api';
 import { Modal } from '../../components/common/Modal';
 import { Badge } from '../../components/common/Badge';
 import { useToast } from '../../context/ToastContext';
@@ -50,12 +51,18 @@ export const AlertsNotificationsPage = () => {
     };
 
     setAlerts((prev) => [created, ...prev]);
+    api.createAlert({
+      stock: newAlert.stock,
+      condition: newAlert.condition,
+      targetPrice: Number(newAlert.targetPrice)
+    });
     showToast(`Price alert created for ${newAlert.stock}`, 'success');
     setIsAlertModalOpen(false);
     setNewAlert({ stock: 'RELIANCE', condition: 'ABOVE', targetPrice: '' });
   };
 
   const handleDeleteAlert = (id) => {
+    api.deleteAlert(id);
     setAlerts((prev) => prev.filter((a) => a.id !== id));
     showToast('Alert deleted', 'info');
   };

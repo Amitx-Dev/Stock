@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { mockStocks } from '../../data/mockStocks';
+import { api } from '../../services/api';
 import { ChartCard } from '../../components/common/ChartCard';
 import { Modal } from '../../components/common/Modal';
 import { Badge } from '../../components/common/Badge';
@@ -70,6 +71,12 @@ export const StockTradingPage = () => {
 
   const handleExecuteTrade = () => {
     setIsSubmitting(true);
+    api.createTrade({
+      stock: selectedStock.symbol,
+      type: orderSide,
+      qty: quantity,
+      price: executedPrice
+    });
     setTimeout(() => {
       setIsSubmitting(false);
       setIsConfirmOpen(false);

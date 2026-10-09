@@ -53,14 +53,54 @@ The platform includes pre-configured access accounts for both user personas:
 
 ---
 
+---
+
+## 🗄️ MySQL Database Setup
+
+TradeNest includes a complete relational schema and REST API backend powered by **MySQL** and **Express.js**.
+
+### 1. Database Schema & Tables
+- **Database**: `tradenest_db`
+- **Schema File**: `database/schema.sql`
+- **Tables Included**:
+  - `users`: User profiles, roles (`Admin` / `Trader`), KYC statuses, and auth hashes.
+  - `stocks`: Real-time stock quotes, 52-week highs/lows, market caps, P/E ratios, and volumes.
+  - `holdings`: Depository portfolio holdings linked to user portfolios.
+  - `trades`: Order book executions (BUY/SELL), filled quantities, and realized P&Ls.
+  - `alerts`: Automated price thresholds and trigger statuses.
+  - `security_settings` & `security_incidents`: 2FA, encryption at rest, session timeouts, and threat logs.
+  - `system_settings`: Platform trading hours, flat brokerage, and maintenance switches.
+
+### 2. Import Schema into MySQL
+Run the following in MySQL or phpMyAdmin / XAMPP:
+
+```bash
+# Using MySQL CLI
+mysql -u root -p < database/schema.sql
+
+# In PowerShell
+Get-Content database/schema.sql | & mysql -u root
+```
+
+### 3. Backend Configuration (`server/.env`)
+
+```env
+PORT=5000
+DB_HOST=localhost
+DB_PORT=3306
+DB_USER=root
+DB_PASSWORD=
+DB_NAME=tradenest_db
+```
+
+---
+
 ## 🛠️ Tech Stack
 
-- **Framework**: React 18 + Vite
-- **Routing**: React Router DOM v6
-- **Styling**: Tailwind CSS with dark mode class support
-- **Visualizations**: Recharts
-- **Icons**: Lucide React
-- **State**: In-memory React Context (AuthContext, ThemeContext, ToastContext)
+- **Frontend**: React 18 + Vite + Tailwind CSS + Recharts + Lucide React
+- **Backend**: Node.js + Express.js + MySQL2 (Connection Pool)
+- **Database**: MySQL 8.0+ / MariaDB / XAMPP MySQL
+- **Routing & State**: React Router DOM v6 + Context API
 
 ---
 
@@ -68,18 +108,21 @@ The platform includes pre-configured access accounts for both user personas:
 
 ### Prerequisites
 - Node.js (v18+)
-- npm (v9+)
+- MySQL Server (Running on `localhost:3306`)
 
-### Installation
+### Running the Application
 
 ```bash
-# Install dependencies
+# 1. Install dependencies
 npm install
 
-# Start Vite development server
+# 2. Start MySQL Backend API Server (Port 5000)
+npm run server
+
+# 3. Start Vite Frontend Development Server (Port 5173)
 npm run dev
 
-# Build for production
+# 4. Build for production
 npm run build
 ```
 

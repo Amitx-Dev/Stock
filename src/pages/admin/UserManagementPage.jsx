@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { initialUsers } from '../../data/mockUsers';
+import { api } from '../../services/api';
 import { DataTable } from '../../components/common/DataTable';
 import { Modal } from '../../components/common/Modal';
 import { Badge } from '../../components/common/Badge';
@@ -10,6 +11,14 @@ import { Users, UserPlus, Edit3, Trash2, Shield, UserCheck, AlertCircle, Mail } 
 export const UserManagementPage = () => {
   const [users, setUsers] = useState(initialUsers);
   const { showToast } = useToast();
+
+  useEffect(() => {
+    api.getUsers().then((remoteUsers) => {
+      if (remoteUsers && Array.isArray(remoteUsers) && remoteUsers.length > 0) {
+        setUsers(remoteUsers);
+      }
+    });
+  }, []);
 
   // Modal states
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -67,6 +76,7 @@ export const UserManagementPage = () => {
 
     if (selectedUser) {
       // Update
+      api.updateUser(selectedUser.id, formData);
       setUsers((prev) =>
         prev.map((u) =>
           u.id === selectedUser.id ? { ...u, ...formData } : u
@@ -82,6 +92,7 @@ export const UserManagementPage = () => {
         lastLogin: 'Never',
         tradesCount: 0
       };
+      api.createUser(formData);
       setUsers((prev) => [newUser, ...prev]);
       showToast('User created successfully', 'success');
     }
@@ -91,6 +102,7 @@ export const UserManagementPage = () => {
 
   const handleDeleteUser = () => {
     if (!selectedUser) return;
+    api.deleteUser(selectedUser.id);
     setUsers((prev) => prev.filter((u) => u.id !== selectedUser.id));
     showToast('User deleted successfully', 'success');
     setIsDeleteOpen(false);
